@@ -44,6 +44,8 @@ public class Parser {
         long currFilePointer = position + length; //would this need to be manually converted to long?
         raf.seek(currFilePointer);
 
+
+
     }
     
     //you can process the files you read in here and call your mutiway-
