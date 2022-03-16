@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 
 public class Parser {
     private RandomAccessFile mergeFile;
@@ -30,24 +31,44 @@ public class Parser {
          */
         RandomAccessFile ifrd = new RandomAccessFile(infoToParse, "r");
 
-        //need to wrap this in some sort of loop
-        int position = ifrd.readInt();
-        int length = ifrd.readInt();
 
-        byte[] inputBuff = new byte[8192]; // "a block is 8,192 bytes" according to project description
+        int position;
+        int length;
 
-        raf.readFully(inputBuff, position, length); //use position and length to add first block to input buffer
+        for (int j = 0; j < raf.length()/8; j++){
+            position = raf.readInt();
+            length = raf.readInt();
 
-        //now: add this block to RAM minheap
+            byte[] inputBuff = new byte[8192]; // declare input buffer
+            // array list instead of array -- read 8 or 16 bytes at a time
 
-        //then: use seek to start getting next block from Run file
-        long currFilePointer = position + length; //would this need to be manually converted to long?
-        raf.seek(currFilePointer);
+            //use position and length to add first block to input buffer
+            raf.readFully(inputBuff, position, length);
+
+            //add this block to arrayList -- THIS PART IS DEFINITELY NOT DONE/RIGHT lol
+            Record myRec = new Record(inputBuff);
+            ArrayList<Record> inBuff = new ArrayList<Record>(512);
+            inBuff.add(myRec); //needs to add in the correct spot
+
+            //use seek to (reset file pointer position) & start getting next block from Run file
+            long currFilePointer = position + length; //would this need to be manually converted to long?
+            raf.seek(currFilePointer);
+
+        }
+
+
+        // 1. use pos/len to access data for each block
+        // 2. each block is presented as a byte array --> then turn it to record
+        // 3. create an arraylist of records
+        // 4. then multiway merge array list
+
+        // use a class for multiway merge (not particularly necessary but would be helpful)
+        //      each merge returns a merged arrayList
+
 
     }
     
-    //you can process the files you read in here and call your mutiway-
-    //merge
+    //you can process the files you read in here and call your multiway merge
     public void run(){
 
     }
