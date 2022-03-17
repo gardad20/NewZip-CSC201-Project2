@@ -24,29 +24,37 @@ public class Parser {
             throws IOException,
             FileNotFoundException {
         RandomAccessFile raf = new RandomAccessFile(fileToParse, "r");
-
+        int position;
+        int length;
+        //How do get the length of raf as an int?
+        ArrayList<Record>[] listArray = new ArrayList<Record>[8];
         /*
         Since start point and length are both integers, you will
         use readInt here. Remember 1 Integer = 4bytes,
         which enlarge the size of file
          */
+
+        //read and parse by Merge Info
         RandomAccessFile ifrd = new RandomAccessFile(infoToParse, "r");
+        ArrayList<Mergeinfo> infoList = new ArrayList<Mergeinfo>();
 
+        for(int i=0; i<ifrd.length(); i++){
+            position = ifrd.readInt();
+            length = ifrd.readInt();
+            Mergeinfo merge = new Mergeinfo(position, length);
+            infoList.add(merge);
+        }
 
-        int position;
-        int length;
         // array list instead of array -- read 8 or 16 bytes at a time
         ArrayList<Record> inBuff = new ArrayList<Record>(512);
 
         for (int j = 0; j < raf.length()/8; j++){
-            position = ifrd.readInt();
-            length = ifrd.readInt();
-
-
             byte[] inputBuff = new byte[8192]; // declare input buffer
 
+            int currPosition = infoList.get(j).getFirst();
+            int currLength = infoList.get(j).getLength();
             //use position and length to add first block to input buffer
-            raf.readFully(inputBuff, position, length);
+            raf.readFully(inputBuff, currPosition, currLength);
 
             //add this block to arrayList -- THIS PART IS DEFINITELY NOT DONE/RIGHT lol
             Record myRec = new Record(inputBuff);
@@ -54,7 +62,7 @@ public class Parser {
             inBuff.add(myRec); //needs to add in the correct spot
 
             //use seek to (reset file pointer position) & start getting next block from Run file
-            long currFilePointer = position + length; //would this need to be manually converted to long?
+            long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
             raf.seek(currFilePointer);
         }
         Collections.sort(inBuff);
