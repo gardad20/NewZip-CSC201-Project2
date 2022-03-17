@@ -15,7 +15,7 @@ import java.util.Arrays;
 public class MultiMerge {
     public MultiMerge(){}
 
-    //Takes an array of Arraylists and merges them (Not correct)
+    //Takes an array of Arraylists and merges them
     public static void merge(ArrayList<Record>[] toSort){
         for(int i=0; i< toSort.length; i++){
             Arrays.sort(toSort[i].toArray());

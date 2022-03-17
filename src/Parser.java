@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Parser {
     private RandomAccessFile mergeFile;
@@ -34,26 +35,32 @@ public class Parser {
 
         int position;
         int length;
+        // array list instead of array -- read 8 or 16 bytes at a time
+        ArrayList<Record> inBuff = new ArrayList<Record>(512);
 
         for (int j = 0; j < raf.length()/8; j++){
-            position = raf.readInt();
-            length = raf.readInt();
+            position = ifrd.readInt();
+            length = ifrd.readInt();
+
 
             byte[] inputBuff = new byte[8192]; // declare input buffer
-            // array list instead of array -- read 8 or 16 bytes at a time
 
             //use position and length to add first block to input buffer
             raf.readFully(inputBuff, position, length);
 
             //add this block to arrayList -- THIS PART IS DEFINITELY NOT DONE/RIGHT lol
             Record myRec = new Record(inputBuff);
-            ArrayList<Record> inBuff = new ArrayList<Record>(512);
+
             inBuff.add(myRec); //needs to add in the correct spot
 
             //use seek to (reset file pointer position) & start getting next block from Run file
             long currFilePointer = position + length; //would this need to be manually converted to long?
             raf.seek(currFilePointer);
+        }
+        Collections.sort(inBuff);
 
+        for(int i=0; i<inBuff.size(); i++){
+            System.out.println(inBuff.get(i).toString());
         }
 
 
