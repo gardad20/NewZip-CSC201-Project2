@@ -27,7 +27,7 @@ public class Parser {
         int position;
         int length;
         //How do get the length of raf as an int?
-        ArrayList<Record>[] listArray = new ArrayList<Record>[8];
+//        ArrayList<Record> listArray = new ArrayList<Record>();
         /*
         Since start point and length are both integers, you will
         use readInt here. Remember 1 Integer = 4bytes,
@@ -36,56 +36,67 @@ public class Parser {
 
         //read and parse by Merge Info
         RandomAccessFile ifrd = new RandomAccessFile(infoToParse, "r");
-        ArrayList<Mergeinfo> infoList = new ArrayList<Mergeinfo>();
+        ArrayList<MergeInfo> infoList = new ArrayList<MergeInfo>();
 
+        // read pos/len info into a Merge object, then into infoList arrayList
         for(int i=0; i<ifrd.length(); i++){
             position = ifrd.readInt();
             length = ifrd.readInt();
-            Mergeinfo merge = new Mergeinfo(position, length);
+            MergeInfo merge = new MergeInfo(position, length);
             infoList.add(merge);
         }
 
-        // array list instead of array -- read 8 or 16 bytes at a time
-        ArrayList<Record> inBuff = new ArrayList<Record>(512);
+        ArrayList<Record> inBuff = new ArrayList<Record>(512); // buffer to store Blocks as they go into ListArray
+
+        ArrayList<ArrayList<Record>> listArray = new ArrayList<ArrayList<Record>>(); // to store all Block ArrayLists
+
 
         for (int j = 0; j < raf.length()/8; j++){
             byte[] inputBuff = new byte[8192]; // declare input buffer
-
-            int currPosition = infoList.get(j).getFirst();
+            int currPosition = infoList.get(j).getStart();
             int currLength = infoList.get(j).getLength();
-            //use position and length to add first block to input buffer
+
+            // add a block to input buffer (using pos and len)
             raf.readFully(inputBuff, currPosition, currLength);
 
-            //add this block to arrayList -- THIS PART IS DEFINITELY NOT DONE/RIGHT lol
-            Record myRec = new Record(inputBuff);
+            // divide inputBuff into records, then put those records into inBuff arrayList
+            for (int k = 0; k < 512; k++){
+                byte[] recordX = java.util.Arrays.copyOfRange(inputBuff, k, k+16); // isolates one record from inputBuff
+                Record myRec = new Record(recordX);
+                inBuff.add(myRec);
+            }
 
-            inBuff.add(myRec); //needs to add in the correct spot
+            // sort the records inside inBuff
+            Collections.sort(inBuff);
+
+            // add inBuff contents to listArray --> just add it now, multiway merge later
+            listArray.add(inBuff);
+
+            // clear inBuff in prep for next iteration
+            inBuff.clear();
 
             //use seek to (reset file pointer position) & start getting next block from Run file
             long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
             raf.seek(currFilePointer);
         }
-        Collections.sort(inBuff);
 
+        // What is this doing ??
         for(int i=0; i<inBuff.size(); i++){
             System.out.println(inBuff.get(i).toString());
         }
 
 
         // 1. use pos/len to access data for each block
-        // 2. each block is presented as a byte array --> then turn it to record
-        // 3. create an arraylist of records
-        // 4. then multiway merge array list
+        // 2. each block is presented as a byte array --> then turn it into records
+        // 3. create an arrayList of records (necessary for each block)
+        // 4. then multiway merge arrayLists
 
         // use a class for multiway merge (not particularly necessary but would be helpful)
         //      each merge returns a merged arrayList
 
 
-
-
-
     }
-    
+
     //you can process the files you read in here and call your multiway merge
     public void run(){
 
