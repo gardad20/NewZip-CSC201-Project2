@@ -64,6 +64,7 @@ public class Parser {
                 byte[] recordX = java.util.Arrays.copyOfRange(inputBuff, k, k+16); // isolates one record from inputBuff
                 Record myRec = new Record(recordX);
                 inBuff.add(myRec);
+                firstMergeFile.write(recordX); // PROBLEM! should be sorted (but isn't rn) when going into the File
             }
 
             // sort the records inside inBuff

@@ -14,7 +14,8 @@ public class MultiMerge {
     /*
         should take two (already internally sorted) arrayLists, merge together, return one sorted arrayList
 
-        compare first record of each arrayList, see which is smaller, then
+        compare first record of each arrayList, see which is smaller, then add the smaller to the output buffer
+            then, the output buffer is written to another file
      */
 
 
