@@ -3,7 +3,6 @@ The main file to read two files from the command line
  */
 /*
  On my honor:
-
  - I have not used source code obtained from another student,
  or any other unauthorized source, either modified or
  unmodified.

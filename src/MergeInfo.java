@@ -2,7 +2,6 @@ public class MergeInfo {
     private int start;
     private int length;
 
-
     // These are in bytes
     /**
      * Basic constructor

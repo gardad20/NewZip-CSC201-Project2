@@ -47,7 +47,6 @@ public class Parser {
         }
 
         ArrayList<Record> inBuff = new ArrayList<Record>(512); // buffer to store Blocks as they go into ListArray
-
         ArrayList<ArrayList<Record>> listArray = new ArrayList<ArrayList<Record>>(); // to store all Block ArrayLists
 
         for (int j = 0; j < raf.length()/8; j++){
