@@ -50,7 +50,6 @@ public class Parser {
 
         ArrayList<ArrayList<Record>> listArray = new ArrayList<ArrayList<Record>>(); // to store all Block ArrayLists
 
-
         for (int j = 0; j < raf.length()/8; j++){
             byte[] inputBuff = new byte[8192]; // declare input buffer
             int currPosition = infoList.get(j).getStart();
@@ -72,6 +71,7 @@ public class Parser {
 
             // add inBuff contents to listArray --> just add it now, multiway merge later
             listArray.add(inBuff);
+
 
             // clear inBuff in prep for next iteration
             inBuff.clear();

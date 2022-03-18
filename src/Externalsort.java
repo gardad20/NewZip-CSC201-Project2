@@ -21,6 +21,8 @@ The main file to read two files from the command line
  anything during the discussion or modifies any computer file
  during the discussion. I have violated neither the spirit nor
 letter of this restriction.
+
+Signed, Sophie Lee and Abby Gardner
  */
 
 //Do not need to change
