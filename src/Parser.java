@@ -46,33 +46,27 @@ public class Parser {
             infoList.add(merge);
         }
 
-        ArrayList<Record> inBuff = new ArrayList<Record>(); // buffer to store Blocks as they go into ListArray
-        ArrayList<ArrayList<Record>> listArray = new ArrayList<ArrayList<Record>>(); // to store all Block ArrayLists
+        //array of objects?
+        ArrayList<byte[]> listArray = new ArrayList<byte[]>(); // to store all Block ArrayLists
 
-        for (int j = 0; j < ifrd.length()/8; j++){
+        //to hold positions for each run
+        ArrayList<Integer> positionArray = new ArrayList<>();
+
+        for (int j = 0; j < infoList.size(); j++){
             int currPosition = infoList.get(j).getStart();
             int currLength = infoList.get(j).getLength();
-            byte[] inputBuff = new byte[currLength*8]; // declare input buffer
+            byte[] inputBuff = new byte[8192]; // declare input buffer
 
             // add a block to input buffer (using pos and len)
-            raf.readFully(inputBuff, currPosition, currLength);
+            raf.readFully(inputBuff, currPosition, 8192);
 
-            // divide inputBuff into records, then put those records into inBuff arrayList
-            for (int k = 0; k < 512*8; k++){
-                byte[] recordX = java.util.Arrays.copyOfRange(inputBuff, k, k+16); // isolates one record from inputBuff
-                Record myRec = new Record(recordX);
-                inBuff.add(myRec);
-                firstMergeFile.write(recordX); // PROBLEM! should be sorted (but isn't rn) when going into the File
-            }
-
-            // sort the records inside inBuff
-            Collections.sort(inBuff);
+            //how to get position to store in positionArray?
 
             // add inBuff contents to listArray --> just add it now, multiway merge later
-            listArray.add(inBuff);
+            listArray.add(inputBuff);
 
             // clear inBuff in prep for next iteration
-            inBuff.clear();
+            //inBuff.clear();
 
             //use seek to (reset file pointer position) & start getting next block from Run file
             long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
@@ -89,6 +83,39 @@ public class Parser {
         //      each merge returns a merged arrayList
 
 
+        //multi-way merge
+       int[] flagHolder = new int[8];
+        //output buff hold records?
+
+       boolean flag = true;
+       for(int i=0; i< flagHolder.length; i++){
+           if(flagHolder[i]!=7){
+               flag = false;
+           }
+           // Updates array once empty
+           // If not full block left leave remaining bytes empty
+           if(flagHolder[i]==7){
+               byte[] newArray = new byte[8192];
+               raf.readFully(newArray, positionArray.get(i), 8192);
+               //will work once listArray contains arrays
+               listArray.set(i, newArray);
+           }
+       }
+       while(!flag){
+           //where we compare and update flag in flagHolder array
+           // get the key value for each array at its flag
+           double[] keys = new double[8];
+           for (int j=0; j<8; j++){
+               byte[] recordX = java.util.Arrays.copyOfRange(listArray.get(j), flagHolder[j], j+8); // isolates one record from inputBuff
+               Record myRec = new Record(recordX);
+               keys[j] = myRec.getKey();
+               //firstMergeFile.write(recordX); // PROBLEM! should be sorted (but isn't rn) when going into the File
+           }
+           //find may key value in keys array --> add that value to outputBuff and change corresponding flag in flagHolders
+           for(){
+
+           }
+       }
     }
 
     //you can process the files you read in here and call your multiway merge
