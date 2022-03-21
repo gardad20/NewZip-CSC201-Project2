@@ -68,6 +68,12 @@ public class MergeInfo {
         this.length = lengthToSet;
     }
 
+    //updates start position and length
+    public void changeValues(){
+        this.length = length-16;
+        this.start = start + 16;
+    }
+
     @Override
     public String toString() {
         return this.start + " " + this.length;
