@@ -51,32 +51,53 @@ public class Parser {
         //array of objects?
         ArrayList<byte[]> listArray = new ArrayList<byte[]>(); // to store all Block ArrayLists
 
-        //to hold positions for each run
+        // to hold positions for each run
         ArrayList<Integer> positionArray = new ArrayList<>();
 
+        // to hold the first Record of each run
         ArrayList<Record> recordValArray = new ArrayList<>();
+
+        // to hold Info (pos/len) for each round of merging
+        ArrayList<MergeInfo> updatedInfoList = new ArrayList<MergeInfo>();
 
         // to read in the first record from each run
         while (infoList.size()!= 1){
             for(int i=0; i<raf.length()/8;i++){
                 int currPosition = infoList.get(i).getStart(); //find the start of each run
-                int currLength = infoList.get(i).getLength(); //find the start of each run
+                int currLength = infoList.get(i).getLength(); //find the length of each run
 
                 //How to read fully without output buffer?
                 byte[] tempRec = new byte[16];
-                raf.readFully(tempRec, currPosition, 16);
+                raf.readFully(tempRec, currPosition, 16);  //IOOB EXCEPTION?
                 Record myRec1 = new Record(tempRec);
-                //listArray.add(tempRec); //add the first record of each run to the arrayList
-                recordValArray.add(myRec1;
-                long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
+                recordValArray.add(myRec1);//add the first record of each run to the arrayList
+
+                long currFilePointer = currPosition + currLength + 1; //would this need to be manually converted to long?
                 raf.seek(currFilePointer);
 
-                int[] outputBuff = new int[8];
-                //merge
-                MultiMerge.merge(recordValArray, infoList, outputBuff);
+                Record[] outputBuff = new Record[8]; //outputBuff will hold Records
 
-                //write
+                //merge
+                outputBuff = MultiMerge.merge(recordValArray, infoList, outputBuff);
+
+
+                for (Record x : outputBuff) {
+                    // write each record (in byte array format) to the output file
+                    firstMergeFile.write(x.getWholeRecord());
+
+                    //for testing
+                    System.out.println(x.getKey());
+                }
+
+                // stores pos/len for the recently sorted set of 8 records (now treating it as one unit)
+                updatedInfoList.add(new MergeInfo(i*16, outputBuff.length));
+
             }
+
+            for(int i=0; i<raf.length()%8;i++){
+                //merge using updatedInfoList
+            }
+
         }
 
         // to call merge on listArray, the container for first records of runs
