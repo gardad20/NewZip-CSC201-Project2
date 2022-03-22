@@ -26,4 +26,11 @@ public class MultiMerge {
         }
     }
 
+    public static Record findMin(ArrayList<Record>[] toSort){
+        for(int i=0; i< toSort.length; i++){
+            Arrays.sort(toSort[i].toArray());
+        }
+        return toSort.get(0);
+    }
+
 }

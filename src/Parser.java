@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -53,26 +54,45 @@ public class Parser {
         //to hold positions for each run
         ArrayList<Integer> positionArray = new ArrayList<>();
 
-        //while loop while (infoList.size()!=
-        //create temporary array list for mergeinfo
-        for (int j = 0; j < infoList.size(); j++){
-            int currPosition = infoList.get(j).getStart();
-            int currLength = infoList.get(j).getLength();
-            byte[] inputBuff = new byte[8192]; // declare input buffer
+        // to read in the first record from each run
+        int n=0;
+        while (infoList.size()!= 0){
+            int currPosition = infoList.get(n).getStart(); //find the start of each run
+            int currLength = infoList.get(n).getLength(); //find the start of each run
 
-            // add a block to input buffer (using pos and len)
-            raf.readFully(inputBuff, currPosition, 8192);
+            byte[] tempRec = new byte[16];
+            raf.readFully(tempRec, currPosition, 16);
+            Record myRec1 = new Record(tempRec);
+            listArray.add(tempRec); //add the first record of each run to the arrayList
 
-            // add inBuff contents to listArray --> just add it now, multiway merge later
-            listArray.add(inputBuff);
-
-            // clear inBuff in prep for next iteration
-            //inBuff.clear();
-
-            //use seek to (reset file pointer position) & start getting next block from Run file
+            n++;
             long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
             raf.seek(currFilePointer);
         }
+
+        // to call merge on listArray, the container for first records of runs
+        MultiMerge.merge(listArray);  // will work when merge function takes in byte arrays
+
+
+//        //create temporary array list for mergeinfo
+//        for (int j = 0; j < infoList.size(); j++){
+//            int currPosition = infoList.get(j).getStart();
+//            int currLength = infoList.get(j).getLength();
+//            byte[] inputBuff = new byte[8192]; // declare input buffer
+//
+//            // add a block to input buffer (using pos and len)
+//            raf.readFully(inputBuff, currPosition, 8192);
+//
+//            // add inBuff contents to listArray --> just add it now, multiway merge later
+//            listArray.add(inputBuff);
+//
+//            // clear inBuff in prep for next iteration
+//            //inBuff.clear();
+//
+//            //use seek to (reset file pointer position) & start getting next block from Run file
+//            long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
+//            raf.seek(currFilePointer);
+//        }
 
 
         // 1. use pos/len to access data for each block
