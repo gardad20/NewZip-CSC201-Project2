@@ -54,24 +54,33 @@ public class Parser {
         //to hold positions for each run
         ArrayList<Integer> positionArray = new ArrayList<>();
 
+        ArrayList<Record> recordValArray = new ArrayList<>();
+
         // to read in the first record from each run
-        int n=0;
-        while (infoList.size()!= 0){
-            int currPosition = infoList.get(n).getStart(); //find the start of each run
-            int currLength = infoList.get(n).getLength(); //find the start of each run
+        while (infoList.size()!= 1){
+            for(int i=0; i<raf.length()/8;i++){
+                int currPosition = infoList.get(i).getStart(); //find the start of each run
+                int currLength = infoList.get(i).getLength(); //find the start of each run
 
-            byte[] tempRec = new byte[16];
-            raf.readFully(tempRec, currPosition, 16);
-            Record myRec1 = new Record(tempRec);
-            listArray.add(tempRec); //add the first record of each run to the arrayList
+                //How to read fully without output buffer?
+                byte[] tempRec = new byte[16];
+                raf.readFully(tempRec, currPosition, 16);
+                Record myRec1 = new Record(tempRec);
+                //listArray.add(tempRec); //add the first record of each run to the arrayList
+                recordValArray.add(myRec1;
+                long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
+                raf.seek(currFilePointer);
 
-            n++;
-            long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
-            raf.seek(currFilePointer);
+                int[] outputBuff = new int[8];
+                //merge
+                MultiMerge.merge(recordValArray, infoList, outputBuff);
+
+                //write
+            }
         }
 
         // to call merge on listArray, the container for first records of runs
-        MultiMerge.merge(listArray);  // will work when merge function takes in byte arrays
+        //MultiMerge.merge(listArray);
 
 
 //        //create temporary array list for mergeinfo
