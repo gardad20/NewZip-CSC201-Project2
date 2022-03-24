@@ -33,8 +33,8 @@ public class MultiMerge {
 
         // will find & add each min value to the output buffer in order
          for (int k = 0; k < toSort.size(); k++){
-
              // finds Min value
+             //why 1?
              if(elemInOutputBuff!=1) {
                  double min = Double.MAX_VALUE;
                  int minIndex = -1;
@@ -44,6 +44,7 @@ public class MultiMerge {
                          minIndex = j;
                      }
                  }
+                 
 
                  //writes min value to output buffer
                  outputBuff[k] = toSort.get(minIndex); //should this be written to a diff output buffer?
@@ -61,9 +62,16 @@ public class MultiMerge {
              }
 
          }
-
-
          return outputBuff;
+    }
+
+    public void mergeSort(ArrayList<MergeInfo> mergeList){
+        int numOfRun = mergeList.size()/8;
+        int leftOverMerge = mergeList.size()%8;
+
+        for(int i=0; i<numOfRun; i++){
+
+        }
     }
 
 //    public static Record findMin(ArrayList<Record>[] toSort){

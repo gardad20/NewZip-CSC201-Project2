@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.sql.Array;
 import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +14,7 @@ import java.util.Collections;
 public class Parser {
     private RandomAccessFile mergeFile;
     private RandomAccessFile firstMergeFile;
+    //output buff as class field
 
     // the constructor of parser and you can add more here if
     // you need to
@@ -21,15 +23,14 @@ public class Parser {
         firstMergeFile = new RandomAccessFile("mergeFirst.bin", "rw");
     }
 
-    //while there are runs in info arraylsit
+    //while there are runs in info ArrayList
     public void parseFile(String fileToParse, String infoToParse)
             throws IOException,
             FileNotFoundException {
         RandomAccessFile raf = new RandomAccessFile(fileToParse, "r");
         int position;
         int length;
-        //How do get the length of raf as an int?
-//        ArrayList<Record> listArray = new ArrayList<Record>();
+
         /*
         Since start point and length are both integers, you will
         use readInt here. Remember 1 Integer = 4bytes,
@@ -39,138 +40,87 @@ public class Parser {
         //read and parse by Merge Info
         RandomAccessFile ifrd = new RandomAccessFile(infoToParse, "r");
         ArrayList<MergeInfo> infoList = new ArrayList<MergeInfo>();
+        byte[] outputBuff = new byte[8192];
 
         // read pos/len info into a Merge object, then into infoList arrayList
-        for(int i=0; i<ifrd.length()/8; i++){
+        for (int i = 0; i < ifrd.length() / 8; i++) {
             position = ifrd.readInt();
             length = ifrd.readInt();
             MergeInfo merge = new MergeInfo(position, length);
             infoList.add(merge);
         }
 
-        //array of objects?
-        ArrayList<byte[]> listArray = new ArrayList<byte[]>(); // to store all Block ArrayLists
+        int pass = 0;
+        while (infoList.size() > 1) {
+            int numOfMerges = infoList.size() / 8;
+            int leftOverMerge = infoList.size() % 8;
 
-        // to hold positions for each run
-        ArrayList<Integer> positionArray = new ArrayList<>();
-
-        // to hold the first Record of each run
-        ArrayList<Record> recordValArray = new ArrayList<>();
-
-        // to hold Info (pos/len) for each round of merging
-        ArrayList<MergeInfo> updatedInfoList = new ArrayList<MergeInfo>();
-
-        // to read in the first record from each run
-        while (infoList.size()!= 1){
-            for(int i=0; i<raf.length()/8;i++){
-                int currPosition = infoList.get(i).getStart(); //find the start of each run
-                int currLength = infoList.get(i).getLength(); //find the length of each run
-
-                //How to read fully without output buffer?
-                byte[] tempRec = new byte[16];
-                raf.readFully(tempRec, currPosition, 16);  //IOOB EXCEPTION?
-                Record myRec1 = new Record(tempRec);
-                recordValArray.add(myRec1);//add the first record of each run to the arrayList
-
-                long currFilePointer = currPosition + currLength + 1; //would this need to be manually converted to long?
-                raf.seek(currFilePointer);
-
-                Record[] outputBuff = new Record[8]; //outputBuff will hold Records
-
-                //merge
-                outputBuff = MultiMerge.merge(recordValArray, infoList, outputBuff);
-
-
-                for (Record x : outputBuff) {
-                    // write each record (in byte array format) to the output file
-                    firstMergeFile.write(x.getWholeRecord());
-
-                    //for testing
-                    System.out.println(x.getKey());
-                }
-
-                // stores pos/len for the recently sorted set of 8 records (now treating it as one unit)
-                updatedInfoList.add(new MergeInfo(i*16, outputBuff.length));
-
+            for (int i = 0; i < numOfMerges; i++) {
+                mergeRun(raf, infoList, outputBuff, i * 8, 8);
             }
 
-            for(int i=0; i<raf.length()%8;i++){
-                //merge using updatedInfoList
+            if (leftOverMerge != 0) {
+                mergeRun(raf, infoList, outputBuff, numOfMerges * 8, leftOverMerge);
+                numOfMerges++;
             }
 
+            ArrayList<MergeInfo> infoList2 = new ArrayList<>();
+
+            for (int i = 0; i < numOfMerges; i++) {
+                infoList2.add(infoList.get(i));
+            }
+
+
+            infoList = infoList2;
+            //isWriteToMerge =! isWriteToMerge
+
+            pass ++;
+            if(pass == 1){
+
+            }
         }
 
-        // to call merge on listArray, the container for first records of runs
-        //MultiMerge.merge(listArray);
+        //copy mergerist to mergefile
 
-
-//        //create temporary array list for mergeinfo
-//        for (int j = 0; j < infoList.size(); j++){
-//            int currPosition = infoList.get(j).getStart();
-//            int currLength = infoList.get(j).getLength();
-//            byte[] inputBuff = new byte[8192]; // declare input buffer
-//
-//            // add a block to input buffer (using pos and len)
-//            raf.readFully(inputBuff, currPosition, 8192);
-//
-//            // add inBuff contents to listArray --> just add it now, multiway merge later
-//            listArray.add(inputBuff);
-//
-//            // clear inBuff in prep for next iteration
-//            //inBuff.clear();
-//
-//            //use seek to (reset file pointer position) & start getting next block from Run file
-//            long currFilePointer = currPosition + currLength; //would this need to be manually converted to long?
-//            raf.seek(currFilePointer);
-//        }
-
-
-        // 1. use pos/len to access data for each block
-        // 2. each block is presented as a byte array --> then turn it into records
-        // 3. create an arrayList of records (necessary for each block)
-        // 4. then multiway merge arrayLists
-
-        // use a class for multiway merge (not particularly necessary but would be helpful)
-        //      each merge returns a merged arrayList
-
-//
-//        //multi-way merge
-//       int[] flagHolder = new int[8];
-//        //output buff hold records?
-//
-//       boolean flag = true;
-//       for(int i=0; i< flagHolder.length; i++){
-//           if(flagHolder[i]!=7){
-//               flag = false;
-//           }
-//           // Updates array once empty
-//           // If not full block left leave remaining bytes empty
-//           if(flagHolder[i]==7){
-//               byte[] newArray = new byte[8192];
-//               raf.readFully(newArray, positionArray.get(i), 8192);
-//               //will work once listArray contains arrays
-//               listArray.set(i, newArray);
-//           }
-//       }
-//       while(!flag){
-//           //where we compare and update flag in flagHolder array
-//           // get the key value for each array at its flag
-//           double[] keys = new double[8];
-//           for (int j=0; j<8; j++){
-//               byte[] recordX = java.util.Arrays.copyOfRange(listArray.get(j), flagHolder[j], j+8); // isolates one record from inputBuff
-//               Record myRec = new Record(recordX);
-//               keys[j] = myRec.getKey();
-//               //firstMergeFile.write(recordX); // PROBLEM! should be sorted (but isn't rn) when going into the File
-//           }
-//           //find min key value in keys array --> add that value to outputBuff and change corresponding flag in flagHolders
-////           for(){
-////
-////           }
-       //
     }
 
+    public byte[] mergeRun(RandomAccessFile raf, ArrayList<MergeInfo> infoList, byte[] output, int start, int numOfRuns) throws IOException, FileNotFoundException {
+        ArrayList<Record> toSort = new ArrayList<>();
+
+        //check if output is full, if so write to firstmergefile
+
+        for (int i = 0; i < infoList.size(); i++) {
+            byte[] tempRec = new byte[16];
+            raf.readFully(tempRec, infoList.get(i).getStart(), 16);
+            Record myRec1 = new Record(tempRec);
+            toSort.add(myRec1);
+        }
+
+        //Find min key value and min index in toSort
+        double min = Double.MAX_VALUE;
+        int minIndex = -1;
+        for (int k = 0; k < toSort.size(); k++) {
+            for (int j = 0; j < toSort.size(); j++) {
+                if (toSort.get(j).getKey() < min) {
+                    min = toSort.get(j).getKey();
+                    minIndex = j;
+                }
+            }
+        }
+
+        raf.readFully(output, infoList.get(minIndex).getStart(), 16);
+        infoList.get(minIndex).changeValues();
+
+        // 1) how do we keep track of output buff length?
+
+        // 2) what to do when one run is empty?
+
+        return output;
+    }
+
+
     //you can process the files you read in here and call your multiway merge
-    public void run(){
+    public void run() {
 
     }
 }
