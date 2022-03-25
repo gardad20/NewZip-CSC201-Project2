@@ -14,7 +14,9 @@ import java.util.Collections;
 public class Parser {
     private RandomAccessFile mergeFile;
     private RandomAccessFile firstMergeFile;
-    //output buff as class field
+    private byte[] outputBuffer;
+    private int outBufferSize;
+    private int reach;
 
     // the constructor of parser and you can add more here if
     // you need to
@@ -25,8 +27,7 @@ public class Parser {
 
     //while there are runs in info ArrayList
     public void parseFile(String fileToParse, String infoToParse)
-            throws IOException,
-            FileNotFoundException {
+            throws IOException, FileNotFoundException {
         RandomAccessFile raf = new RandomAccessFile(fileToParse, "r");
         int position;
         int length;
@@ -76,48 +77,81 @@ public class Parser {
 
             pass ++;
             if(pass == 1){
-
+                firstMergeFile.write(outputBuff);
             }
+
+            //mergeFile.write(outputBuff);
         }
 
-        //copy mergerist to mergefile
+        //copy mergelist to mergefile
 
+
+        // first time writing to merge, write to merge first within
     }
 
     public byte[] mergeRun(RandomAccessFile raf, ArrayList<MergeInfo> infoList, byte[] output, int start, int numOfRuns) throws IOException, FileNotFoundException {
         ArrayList<Record> toSort = new ArrayList<>();
 
-        //check if output is full, if so write to firstmergefile
-
-        for (int i = 0; i < infoList.size(); i++) {
-            byte[] tempRec = new byte[16];
-            raf.readFully(tempRec, infoList.get(i).getStart(), 16);
-            Record myRec1 = new Record(tempRec);
-            toSort.add(myRec1);
+        // check if output is full, if so write to firstmergefile
+        if (outBufferSize == numOfRuns){
+            mergeFile.write(output);
+            output = new byte[8192];
         }
 
-        //Find min key value and min index in toSort
-        double min = Double.MAX_VALUE;
-        int minIndex = -1;
-        for (int k = 0; k < toSort.size(); k++) {
-            for (int j = 0; j < toSort.size(); j++) {
-                if (toSort.get(j).getKey() < min) {
-                    min = toSort.get(j).getKey();
-                    minIndex = j;
+        else {
+            for (int i = 0; i < numOfRuns; i++) {
+                // check condition of this loop -- how to use start/numOfRuns parameters
+                // used to be infoList.size() which loops by how many total runs exist
+
+                long currFilePointer = infoList.get(i).getStart();
+                raf.seek(currFilePointer);
+
+                // read in one record of the run
+                byte[] tempRec = new byte[16];
+                raf.readFully(tempRec);
+                Record myRec1 = new Record(tempRec);
+                toSort.add(myRec1);
+            }
+
+            // reach = how many runs left/already to read
+            //Find min key value and min index in toSort
+            double min = Double.MAX_VALUE;
+            int minIndex = -1;
+            for (int k = 0; k < toSort.size(); k++) {
+                for (int j = 0; j < toSort.size(); j++) {
+                    if (toSort.get(j).getKey() < min) {
+                        min = toSort.get(j).getKey();
+                        minIndex = j;
+                    }
                 }
             }
+
+            raf.readFully(output, infoList.get(minIndex).getStart(), 16); // read the smallest Record to the output buffer
+                // infoList.get(minIndex) --> do the infoList and toSort indices match up? esp if
+            outBufferSize++;
+            infoList.get(minIndex).changeValues();
+
+
+            // 1) how do we keep track of output buff length?
+
+            // 2) what to do when one run is empty? --> merge all 8 completely together, then next 8
+
+            // 3) how to deal with two different cases (how many merges) (aka. start and numOfRuns parameters)?
+
+            // 4) should we be writing to raf (as the original input file) --> when mergeFile is the same size as raf?
+
         }
-
-        raf.readFully(output, infoList.get(minIndex).getStart(), 16);
-        infoList.get(minIndex).changeValues();
-
-        // 1) how do we keep track of output buff length?
-
-        // 2) what to do when one run is empty?
 
         return output;
     }
 
+
+//    public void writeToFile(){
+//        if (outBufferSize == numOfRuns){
+//            mergeFile.write(output);
+//            output = new byte[8192];
+//        }
+//    }
 
     //you can process the files you read in here and call your multiway merge
     public void run() {
