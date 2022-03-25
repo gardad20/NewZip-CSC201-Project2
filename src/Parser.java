@@ -51,14 +51,14 @@ public class Parser {
             infoList.add(merge);
         }
 
-        System.out.println(infoList.size());
+        System.out.println("infoList size: " +infoList.size());
 
         int pass = 0;
         while (infoList.size() > 1) {
             int numOfMerges = infoList.size() / 8;
             System.out.println("num of runs: " + numOfMerges);
             int leftOverMerge = infoList.size() % 8;
-            int reach = numOfMerges;
+            reach = numOfMerges;
 
             for (int i = 0; i < numOfMerges; i++) {
                 mergeRun(raf, infoList, outputBuff, i * 8, 8);
@@ -96,7 +96,7 @@ public class Parser {
                 // used to be infoList.size() which loops by how many total runs exist
 
             if(infoList.get(i).getLength()!=0) {
-                long currFilePointer = infoList.get(i).getStart();
+                long currFilePointer =  infoList.get(i).getStart(); //(start * 8192)+  ... using start correctly?
                 raf.seek(currFilePointer);
 
                 // read in one record of the run
