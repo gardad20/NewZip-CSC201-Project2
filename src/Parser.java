@@ -125,27 +125,50 @@ public class Parser {
             }
         }
 
-//        System.out.println("pls");
-//        raf.seek(infoList.get(minIndex).getStart()); //added in new
-//        raf.readFully(outputBuffer, infoList.get(minIndex).getStart(), 16); // read the smallest Record to the output buffer
-//
-//        outBufferSize++;
-//        infoList.get(minIndex).changeValues();
-//        writeToFile(numOfRuns);
+        //System.out.println("pls");
+        raf.seek(infoList.get(minIndex).getStart()); //added in new
+        //raf.readFully(outputBuffer, infoList.get(minIndex).getStart(), 16); // read the smallest Record to the output buffer
+
+        for (int m = 0; m < 16; m++){
+            outputBuffer[outBufferSize] = infoList.get(minIndex).getWholeRecord();
+            outBufferSize++;
+            //need to trace/make sure that this pseudocode actually tracks with our stuff
+        }
+
+        infoList.get(minIndex).changeValues();
+        writeToFile(numOfRuns);
+
+        // create minlist<Record> = 8 elements for 8way merge
+        //use minList to merge outside of this loop
+        while (numOfRuns > 1){ //or (Reach !=numOfRuns-1)
+            //findMin method to check for min inside MinList
+            // should return the index of the smallest (tell us which run has the smallest one)
+            // if (runInfo.get(index + start).getLength !=0) {
+            // write() }
+            // else { make that element as a null or does not let it compare with other el.s
+            // //reach ++
+            // write()
+            // }
+        }
+
+
+
 
          // DOES THIS CHUNK NEED TO ITERATE MORE OFTEN? weren't we only reading in ONE min value per call to mergeRun?
-        for (int i = 0; i < numOfRuns; i++) {
-            if (infoList.get(start+i).getLength() != 0) { //if the run is not empty, then read in the next min
-                System.out.println("pls");
-
-                raf.seek(infoList.get(minIndex).getStart()); //added in new
-                raf.readFully(outputBuffer, infoList.get(minIndex).getStart(), 16); // read the smallest Record to the output buffer
-                // infoList.get(minIndex) --> do the infoList and toSort indices match up? esp if
-                outBufferSize++;
-                infoList.get(minIndex).changeValues();
-                writeToFile(numOfRuns);
-            }
-        }
+//        for (int i = 0; i < numOfRuns; i++) {
+//            if (infoList.get(start+i).getLength() != 0) { //if the run is not empty, then read in the next min
+//                System.out.println("pls");
+//
+//                raf.seek(infoList.get(minIndex).getStart()); //added in new
+//                raf.readFully(outputBuffer, infoList.get(minIndex).getStart(), 16); // read the smallest Record to the output buffer
+//
+//
+//                // infoList.get(minIndex) --> do the infoList and toSort indices match up? esp if
+//                outBufferSize++;
+//                infoList.get(minIndex).changeValues();
+//                writeToFile(numOfRuns);
+//            }
+//        }
 
 
 
@@ -155,8 +178,6 @@ public class Parser {
             // 3) how to deal with two different cases (how many merges) (aka. start and numOfRuns parameters)?
 
             // 4) should we be writing to raf (as the original input file) --> when mergeFile is the same size as raf?
-
-            // What if there's not a whole record at the end of the run?
 
 
 //        return output;
