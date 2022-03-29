@@ -41,7 +41,6 @@ public class Parser {
         //read and parse by Merge Info
         RandomAccessFile ifrd = new RandomAccessFile(infoToParse, "r");
         ArrayList<MergeInfo> infoList = new ArrayList<MergeInfo>();
-        outBufferSize = 0;
         outputBuffer = new byte[8192];
 
         // read pos/len info into a Merge object, then into infoList arrayList
@@ -90,66 +89,59 @@ public class Parser {
     public void mergeRun(RandomAccessFile raf, ArrayList<MergeInfo> infoList, int start, int numOfRuns) throws IOException, FileNotFoundException {
         ArrayList<Record> minList = new ArrayList<>();
 
-        for (int i = 0; i < numOfRuns; i++) {
-            // check condition of this loop -- how to use start/numOfRuns parameters
-            // used to be infoList.size() which loops by how many total runs exist
+        while(reach > 1) {
+            for (int i = 0; i < numOfRuns; i++) {
+                // check condition of this loop -- how to use start/numOfRuns parameters
+                // used to be infoList.size() which loops by how many total runs exist
 
-            if (infoList.get(start+i).getLength() != 0) { //if the run is not empty, then read the next record from said run
-                long currFilePointer = infoList.get(i).getStart();
-                raf.seek(currFilePointer);
+                if (infoList.get(start + i).getLength() != 0) { //if the run is not empty, then read the next record from said run
+                    long currFilePointer = infoList.get(i).getStart();
+                    raf.seek(currFilePointer);
 
-                // read in one record of the run
-                byte[] tempRec = new byte[16];
-                raf.readFully(tempRec);
-                Record myRec1 = new Record(tempRec);
-                minList.add(myRec1);
-                System.out.println("current MinList size: " + minList.size());
+                    // read in one record of the run
+                    byte[] tempRec = new byte[16];
+                    raf.readFully(tempRec);
+                    Record myRec1 = new Record(tempRec);
+                    minList.add(myRec1);
+                    infoList.get(i).changeValues();
+                    System.out.println("current MinList size: " + minList.size());
 
-            } else { // Run is empty, so subtract one from reach
-                reach--;
-                // reach = how many runs are left to read
-                System.out.println("Reach: "+reach);
+                } else { // Run is empty, so subtract one from reach
+                    reach--;
+                    // reach = how many runs are left to read
+                    System.out.println("Reach: " + reach);
+                }
+
             }
 
-        }
-
-        // Find min key value and min index in toSort
-        double min = Double.MAX_VALUE;
-        int minIndex = -1;
-        for (int k = 0; k < minList.size(); k++) {
-            for (int j = 0; j < minList.size(); j++) {
-                if (minList.get(j).getKey() < min) {
-                    min = minList.get(j).getKey();
-                    minIndex = j;
+            // Find min key value and min index in toSort
+            double min = Double.MAX_VALUE;
+            int minIndex = -1;
+            for (int k = 0; k < minList.size(); k++) {
+                for (int j = 0; j < minList.size(); j++) {
+                    if (minList.get(j).getKey() < min) {
+                        min = minList.get(j).getKey();
+                        minIndex = j;
+                    }
                 }
             }
+
+            //System.out.println("pls");
+            raf.seek(infoList.get(minIndex).getStart()); //added in new
+            //raf.readFully(outputBuffer, infoList.get(minIndex).getStart(), 16); // read the smallest Record to the output buffer
+
+            //Read in the smallest record to output buffer byte by byte
+            for (int m = 0; m < 16; m++) {
+                outputBuffer[outBufferSize] = minList.get(minIndex).getWholeRecord()[m];
+                outBufferSize++;
+                //outputBuffer[outBufferSize] = minList.get(minIndex).getWholeRecord();
+                //need to trace/make sure that this pseudocode actually tracks with our stuff
+            }
+
+           //infoList.get(minIndex).changeValues();
+            writeToFile(numOfRuns);
         }
-
-        //System.out.println("pls");
-        raf.seek(infoList.get(minIndex).getStart()); //added in new
-        //raf.readFully(outputBuffer, infoList.get(minIndex).getStart(), 16); // read the smallest Record to the output buffer
-
-        for (int m = 0; m < 16; m++){
-            outputBuffer[outBufferSize] = infoList.get(minIndex).getWholeRecord();
-            outBufferSize++;
-            //need to trace/make sure that this pseudocode actually tracks with our stuff
-        }
-
-        infoList.get(minIndex).changeValues();
-        writeToFile(numOfRuns);
-
-        // create minlist<Record> = 8 elements for 8way merge
-        //use minList to merge outside of this loop
-        while (numOfRuns > 1){ //or (Reach !=numOfRuns-1)
-            //findMin method to check for min inside MinList
-            // should return the index of the smallest (tell us which run has the smallest one)
-            // if (runInfo.get(index + start).getLength !=0) {
-            // write() }
-            // else { make that element as a null or does not let it compare with other el.s
-            // //reach ++
-            // write()
-            // }
-        }
+    }
 
 
 
@@ -181,14 +173,14 @@ public class Parser {
 
 
 //        return output;
-    }
+
 
 
     public void writeToFile(int numOfRuns) throws IOException, FileNotFoundException {
-        if (outBufferSize == numOfRuns){ // if the num of runs already merged == the number of total runs (aka all is merged)
+        if (outBufferSize%16 == numOfRuns){ // if the num of runs already merged == the number of total runs (aka all is merged)
             mergeFile.write(outputBuffer);
             outputBuffer = new byte[8192];
-        } else if(outBufferSize == reach){ // if the nums of runs already merged == number of runs left to merge
+        } else if(outBufferSize%16 == reach){ // if the nums of runs already merged == number of runs left to merge
             mergeFile.write(outputBuffer);
             outputBuffer = new byte[8192];
         } else if(reach == 1){              // if there is only one more run to merge
