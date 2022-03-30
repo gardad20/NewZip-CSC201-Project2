@@ -70,7 +70,7 @@ public class MergeInfo {
 
     //updates start position and length
     public void changeValues(){
-        this.length = length-16;
+        this.length = length - 16;
         this.start = start + 16;
     }
 
