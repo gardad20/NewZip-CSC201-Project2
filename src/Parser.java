@@ -224,13 +224,18 @@ public class Parser {
         if (outBufferSize == 8192){ // if the num of runs already merged == the number of total runs (aka all is merged)
             mergeFile.write(outputBuffer);
             outputBuffer = new byte[8192];
+            outBufferSize = 0;
         }
 //        else if(outBufferSize%16 == reach){ // if the nums of runs already merged == number of runs left to merge
 //            mergeFile.write(outputBuffer);
 //            outputBuffer = new byte[8192];
 //        }
         else if(reach == 1){              // if there is only one more run to merge
-            mergeFile.write(outputBuffer);
+            byte[] tempOutputBuff = new byte[outBufferSize];
+            for (int i = 0; i < outBufferSize; i++){
+                tempOutputBuff[i] = outputBuffer[i];
+            }
+            mergeFile.write(tempOutputBuff);
             /*
                 DO WE NEED TO WRITE ALL THE MERGED FILES AND THE ONE LEFT? AREN'T WE ONLY WRITING THE MERGED FILES HERE?
 //             */
