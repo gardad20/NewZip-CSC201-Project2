@@ -263,6 +263,9 @@ public class Parser {
                     } else { // Run is empty, so subtract one from reach
                         reach--;
                         System.out.println("Reach: " + reach);
+                        for(int l=0; l<infoList.size(); l++){
+                            System.out.println("index " + l +  " start: " + infoList.get(l).getStart() + " length: " + infoList.get(l).getLength());
+                        }
                     }
                 }
             } else {
@@ -303,6 +306,9 @@ public class Parser {
                     minList.add(minIndex, smallestOne);
                     System.out.println("get here");
                     System.out.println("Reach: " + reach);
+                    for(int l=0; l<infoList.size(); l++){
+                        System.out.println("index " + l +  " start: " + infoList.get(l).getStart() + " length: " + infoList.get(l).getLength());
+                    }
                 }
             }
         }
