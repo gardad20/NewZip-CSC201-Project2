@@ -10,8 +10,10 @@ import java.nio.ByteBuffer;
 
 public class Record implements Comparable<Record> {
     private byte[] wholeRecord;
+    boolean lastOne;
 
     public Record(byte[] record){
+        lastOne = false;
         wholeRecord = record;
     }
 
@@ -25,6 +27,14 @@ public class Record implements Comparable<Record> {
     public double getKey(){
         ByteBuffer buffer = ByteBuffer.wrap(wholeRecord);
         return buffer.getDouble(8);
+    }
+
+    public boolean getLastOne() {
+        return lastOne;
+    }
+
+    public void isLastOne(){
+        this.lastOne = true;
     }
 
     //return the whole Record
