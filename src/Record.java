@@ -17,32 +17,34 @@ public class Record implements Comparable<Record> {
         wholeRecord = record;
     }
 
-    //return the part of ID
+    // Return the part of ID
     public int getID(){
         ByteBuffer buffer = ByteBuffer.wrap(wholeRecord);
         return buffer.getInt();
     }
 
-    //return the part of key
+    // Return the part of key
     public double getKey(){
         ByteBuffer buffer = ByteBuffer.wrap(wholeRecord);
         return buffer.getDouble(8);
     }
 
+    // Returns lastOne boolean variable
     public boolean getLastOne() {
         return lastOne;
     }
 
+    // Signifies that record is last record in run
     public void isLastOne(){
         this.lastOne = true;
     }
 
-    //return the whole Record
+    // Return the whole Record
     public byte[] getWholeRecord(){
         return wholeRecord;
     }
 
-    //comparision
+    // Comparison
     @Override
     public int compareTo(Record target) {
         return Double.compare(this.getKey(), target.getKey());
